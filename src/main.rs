@@ -17,6 +17,7 @@ async fn main() {
     let db = initialize_database().await;
 
     let routes = Router::new()
+        .route("/", get(home))
         .route("/api/shorten", post(shorten_url))
         .route("/{code}", get(redirect_to_full_url))
         .with_state(db);

@@ -1,23 +1,12 @@
 use axum::Json;
 use axum::extract::{OriginalUri, Path, State};
-use axum::http::StatusCode;
+use axum::http::{HeaderMap, StatusCode};
 use axum::response::Redirect;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{Pool, Postgres};
 
-use rushortner::{base62_decode, base62_encode};
-
-pub fn get_base_url(original_uri: &OriginalUri) -> String {
-    let host = original_uri.0.host().unwrap_or("localhost");
-    let scheme = original_uri.0.scheme_str().unwrap_or("http");
-    let port_str = if let Some(port) = original_uri.0.port_u16() {
-        format!(":{port}")
-    } else {
-        ":8081".to_string()
-    };
-    format!("{scheme}://{host}{port_str}")
-}
+use rushortner::{base62_decode, base62_encode, get_base_url};
 
 pub async fn home() -> &'static str {
     "hello"
@@ -36,6 +25,7 @@ pub struct UrlResponse {
 pub async fn shorten_url(
     State(db): State<Pool<Postgres>>,
     original_uri: OriginalUri,
+    headers: HeaderMap,
     Json(payload): Json<ShortenRequest>,
 ) -> Result<Json<UrlResponse>, (StatusCode, Json<Value>)> {
     if payload.url.is_empty() {
@@ -54,7 +44,7 @@ pub async fn shorten_url(
     .unwrap();
 
     let short_code = base62_encode(id.try_into().unwrap());
-    let base_url = get_base_url(&original_uri);
+    let base_url = get_base_url(&original_uri, &headers);
 
     Ok(Json(UrlResponse {
         short_url: format!("{base_url}/{short_code}"),
