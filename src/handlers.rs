@@ -35,13 +35,15 @@ pub async fn shorten_url(
         return Err((StatusCode::BAD_REQUEST, Json(error_response)));
     }
 
-    let id = sqlx::query_scalar!(
+    /*let id = sqlx::query_scalar!(
         r#"INSERT INTO urls (long_url) VALUES ($1) RETURNING id"#,
         payload.url
     )
     .fetch_one(&db)
     .await
-    .unwrap();
+    .unwrap();*/
+
+    let id = 100;
 
     let short_code = base62_encode(id.try_into().unwrap());
     let base_url = get_base_url(&original_uri, &headers);
