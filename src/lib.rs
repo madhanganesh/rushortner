@@ -32,9 +32,14 @@ pub fn get_base_url(original_uri: &OriginalUri) -> String {
     let host = original_uri.0.host().unwrap_or("localhost");
     let scheme = original_uri.0.scheme_str().unwrap_or("http");
     let port_str = if let Some(port) = original_uri.0.port_u16() {
-        format!(":{port}")
+        // Only include port if it's not the default for the scheme
+        if (scheme == "http" && port == 80) || (scheme == "https" && port == 443) {
+            "".to_string()
+        } else {
+            format!(":{port}")
+        }
     } else {
-        ":8081".to_string()
+        "".to_string() // No port specified, assume default for scheme
     };
     format!("{scheme}://{host}{port_str}")
 }
